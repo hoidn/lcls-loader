@@ -1,3 +1,15 @@
+#
+# Constant geometry parameters from specs/xppl1026722/zone_plate.ini
+constants:
+  zone_plate_focal_length_m: 5.32e-2
+  osa_sample_distance_m: 7.0e-3
+  osa_upstream_distance_m: 4.7e-2
+  zone_plate_pinhole_radius_m: 500e-6
+  zone_plate_pinhole_distance_m: 0.0
+  detector_distance_baseline_m: 4.05
+  sim_lens_focal_length_m: 0.0
+  sim_lens_distance_m: 0.0
+
 detector_distance_m:
   - {runs: [9, 9], value: 4.147}
   - {runs: [11, 119], value: 4.050}
