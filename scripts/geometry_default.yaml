@@ -1,0 +1,12 @@
+detector_distance_m:
+  - {runs: [9, 9], value: 4.147}
+  - {runs: [11, 119], value: 4.050}
+  - {runs: [120, 9999], value: 3.200}
+
+sample_probe_distance_m:
+  - {runs: [9, 52], value: 1.45e-3}
+  - {runs: [53, 71], value: 1.00e-3}
+  - {runs: [72, 185], value: 1.45e-3}
+  - {runs: [186, 186], value: 1.00e-3}
+  - {runs: [187, 188], value: 1.45e-3}
+  - {runs: [189, 9999], value: 1.00e-3}
