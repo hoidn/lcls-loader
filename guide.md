@@ -129,3 +129,48 @@ These templates pair with the `ptychodus-bdp` workflow above: use them as your s
 *   **"KeyError: 'Unable to open object ...'"**: This often means the HDF5 file does not contain the expected data at the default paths. Double-check that your LCLS file contains data at `/jungfrau1M/image_img` (for diffraction) and `/lmc/ch*` (for positions). If not, the reader plugin may need to be adjusted.
 *   **Working S3DF environment:** The default psana environment (`ps_20241122` on S3DF) includes PyTables 3.9.x, which can open `xppl1026722_Run0396.h5` directly (`python - <<'PY'\nimport tables; tables.open_file('...')\nPY`). You only need a special LZO plugin if your file actually used that compression.
 *   **Runtime/memory pressure:** For large runs, enable `MemmapEnabled = True` and set `ScratchDirectory` to an existing writable path. Cropping to a smaller window around the bright spot (as in `august_demo_test/lcls_settings.ini`) reduces memory and runtime and avoids kill/timeout signals.
+
+---
+
+## Direct Export to dp/para (fast-path)
+
+In addition to producing a Standard File Layout via `ptychodus-bdp`, the loader can export a ready-to-use pair of HDF5 files in the classic “dp/para” format used by many pipelines:
+
+- `export_run{RUN}/ptychodus_dp.hdf5` containing a 3D `dp` dataset `(n_dp, H, W)`
+- `export_run{RUN}/ptychodus_para.hdf5` containing `object`, `probe`, and position datasets
+
+### When to use
+- You already have a `product-in.h5` and `diffraction.h5` (or equivalent) from a previous run of `ptychodus-bdp` or shared data, and you just want dp/para.
+- You don’t have `ptrepack`/PyTables with LZO locally, but you do have prebuilt HDF5s that are readable in your environment.
+
+### Command (example for run 396)
+
+```shell
+python lcls-loader/scripts/convert_run.py \
+  --run 396 \
+  --center-x 647 --center-y 335 \
+  --crop-width 512 --crop-height 512 \
+  --base-dir . \
+  --output-dir ./tmp_out/run396_existing \
+  --existing-diffraction ./run396_center647_335_diffraction.h5 \
+  --existing-product ./run396_center647_335_product-in.h5
+```
+
+This writes the exported files into `export_run396/`.
+
+### What the exporter does
+- Reorders the `dp` stack to match `probe_position_indexes` and clamps negatives to zero.
+- Copies required object pixel-size attributes into the para file.
+- Seeds the `probe` from `dp[0]` via an inverse FFT of the square root of the intensity to ensure basic probe↔diffraction consistency for QC tools.
+
+### LZO / repack fallback
+- If `ptrepack` is unavailable, the script attempts to use the original `.h5` directly (creates a `_nolzo` symlink when possible). This allows running in environments without LZO, provided the file is readable by `h5py` (or you use `--existing-*` with prebuilt files).
+
+### Validation
+- Use the included checker to quickly validate exported data:
+
+```shell
+python ptychodus_data_checker.py export_run396
+```
+
+You should see a success message with no errors.
